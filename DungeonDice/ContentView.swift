@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    enum Dice: Int, CaseIterable {
+    enum Dice: Int, CaseIterable, Identifiable {
         case four = 4
         case six = 6
         case eight = 8
@@ -17,11 +17,18 @@ struct ContentView: View {
         case twenty = 20
         case hundred = 100
         
+        var id: Int {
+            return rawValue
+        }
+        var description: String { "\(rawValue)-Sided".capitalized }
+        
         func roll() -> Int {
             return Int.random(in: 1...self.rawValue)
         }
     }
-    @State private var label = "Click to roll"
+    @State private var resultMessage = "Click to roll"
+    @State private var animationTrigger = false     // changed when animation should occur
+    @State private var isDoneAnimating = true
     
     var body: some View {
         
@@ -33,19 +40,30 @@ struct ContentView: View {
             
             Spacer()
             
-            Text(label)
+            Text(resultMessage)
                 .font(.largeTitle)
                 .fontWeight(.medium)
                 .frame(height: 150)
                 .minimumScaleFactor(0.5)
                 .multilineTextAlignment(.center)
+//                .scaleEffect(isDoneAnimating ? 1.0 : 0.5)
+//                .opacity(isDoneAnimating ? 1.0 : 0.2)
+                .rotation3DEffect(isDoneAnimating ? .degrees(360) : .degrees(0),
+                                  axis: (x: 1, y: 0, z: 0))  // one full rotation on x-axis only
+                .onChange(of: animationTrigger) {
+                    isDoneAnimating = false     // set beginning state to false
+                    withAnimation(.interpolatingSpring(duration: 0.6, bounce: 0.4)) {
+                        isDoneAnimating = true
+                    }
+                }
             
             Spacer()
             
-            Group {
-                ForEach(Dice.allCases, id: \.self) { die in
-                    Button("\(die)-Sided".capitalized, action: {
-                        label = "You rolled a \(die.roll()) on a \(die)-sided die"
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 102))]) {
+                ForEach(Dice.allCases) { die in
+                    Button(die.description, action: {
+                        resultMessage = "You rolled a \(die.roll()) on a \(die)-sided die"
+                        animationTrigger.toggle()
                     })
                     
                 }
