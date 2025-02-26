@@ -11,7 +11,8 @@ import SwiftUI
 struct DungeonDiceApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+//            ContentView()
+            LazyDemos()
         }
     }
 }
